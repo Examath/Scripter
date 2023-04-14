@@ -1,0 +1,26 @@
+using System;
+using Examath.Core.Plugin;
+using Examath.Core.Enviorment;
+namespace IOExample
+{
+    class EXE : IPlugin, IExecute
+    {
+        public void Execute(Env e)
+        {        	
+            e.Out(e.In("Hello world"));
+        }
+    }
+}
+#scriptmetadatabegin
+<?xml version="1.0" encoding="utf-16"?>
+<ScriptMetadata xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Imports>
+    <Import>C:\Program Files\dotnet\shared\Microsoft.NETCore.App\6.0.13\System.Private.CoreLib.dll</Import>
+    <Import>C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\6.0.13\PresentationFramework.dll</Import>
+    <Import>C:\Users\paulj\Documents\Applets\WPF\Line\Scripter\bin\Debug\net6.0-windows\Examath.Core.dll</Import>
+    <Import>C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\6.0.13\PresentationCore.dll</Import>
+    <Import>C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\6.0.13\WindowsBase.dll</Import>
+    <Import>C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\6.0.13\PresentationCore.dll</Import>
+    <Import>C:\Program Files\dotnet\shared\Microsoft.NETCore.App\6.0.13\System.Runtime.dll</Import>
+  </Imports>
+</ScriptMetadata>

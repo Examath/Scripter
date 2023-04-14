@@ -1,0 +1,79 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net7.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>Resources\Scripter.ico</ApplicationIcon>
+	  <Version>1.2.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Example Scripts\**" />
+    <Compile Remove="Samples\**" />
+    <Compile Remove="Scripts\**" />
+    <EmbeddedResource Remove="Example Scripts\**" />
+    <EmbeddedResource Remove="Samples\**" />
+    <EmbeddedResource Remove="Scripts\**" />
+    <None Remove="Example Scripts\**" />
+    <None Remove="Samples\**" />
+    <None Remove="Scripts\**" />
+    <Page Remove="Example Scripts\**" />
+    <Page Remove="Samples\**" />
+    <Page Remove="Scripts\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="ConsoleClass.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Resources\Scripter.ico" />
+    <None Remove="Resources\Splash.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Resources\Scripter.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AvalonEdit" Version="6.2.0.78" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.5.0" />
+    <PackageReference Include="System.ComponentModel.Composition" Version="7.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Examath\Examath.Core\Examath.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Settings.Designer.cs">
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Metadata\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\Scripter.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <SplashScreen Include="Resources\Splash.png" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,24 @@
+﻿<Application x:Class="Scripter.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Scripter" xmlns:converters="clr-namespace:Examath.Core.Converters;assembly=Examath.Core"
+             StartupUri="MainWindow.xaml"
+             ShutdownMode="OnExplicitShutdown">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Examath.Core;component/Parts/Base.xaml"/>
+                <ResourceDictionary Source="/Examath.Core;component/Parts/Custom.xaml"/>
+                <ResourceDictionary Source="/Examath.Core;component/Parts/Inputs.xaml"/>
+                <ResourceDictionary Source="/Examath.Core;component/Parts/ListView.xaml"/>
+                <ResourceDictionary Source="/Examath.Core;component/Parts/Menu.xaml"/>
+                <ResourceDictionary Source="/Examath.Core;component/Parts/Panels.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            
+            <converters:NotConverter x:Key="NotConverter"/>
+            <converters:StringSplitConverter x:Key="StringSplitConverter"/>
+            <converters:StringSplitConverterParameter x:Key="LocSpl" Separator=":" />
+            <converters:StringSplitConverterParameter x:Key="LocSpl2" Separator=": " Index="2" />
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
