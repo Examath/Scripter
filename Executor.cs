@@ -309,7 +309,6 @@ namespace Scripter
                         new(typeof(System.Windows.Input.Key)),
                         new(typeof(TextAlignment)),
                         new(Path.Combine(Path.GetDirectoryName(typeof(System.Runtime.GCSettings).GetTypeInfo().Assembly.Location) ?? "", "System.Runtime.dll")),
-                        new(typeof(System.ComponentModel.Composition.ExportAttribute)),
                         new(typeof(Env)),
                     },
             };
