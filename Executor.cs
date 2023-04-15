@@ -190,7 +190,7 @@ namespace Scripter
         private async Task FormatDocument()
         {
             if (!IsCodeParsed) await ParseAsync(_CodeText);
-            _CodeText = SyntaxTree.ToString();
+            _CodeText = SyntaxTree.GetRoot().NormalizeWhitespace().ToString();
             Code.BeginUpdate();
             Code.Text = _CodeText;
             Code.EndUpdate();
