@@ -120,19 +120,7 @@
                 VerticalScrollBarVisibility="Auto" Grid.Column="2"
                 DataContext="{Binding Env}"
                 Document="{Binding Output}"
-                >
-            <FlowDocumentScrollViewer.Resources>
-                <Style TargetType="FlowDocument">
-                    <Setter Property="FontFamily" Value="Consolas"/>
-                    <Setter Property="FontSize" Value="12"/>
-                    <Setter Property="PagePadding" Value="0"/>
-                </Style>
-                <Style TargetType="TableCell">
-                    <Setter Property="Background" Value="{StaticResource PanelColourKey}"/>
-                    <Setter Property="Padding" Value="2" />
-                </Style>
-            </FlowDocumentScrollViewer.Resources>
-        </FlowDocumentScrollViewer>
+                />
         <DockPanel Grid.Row="5" Grid.RowSpan="1" Grid.ColumnSpan="3" LastChildFill="False">
             <Label Style="{StaticResource OutputLabel}" x:Name="SelectionPositionLabel" Content="[]"/>
             <Label Style="{StaticResource OutputLabel}" Content="{Binding FileLocation}" Grid.Row="1"/>
