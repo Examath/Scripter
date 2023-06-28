@@ -458,11 +458,10 @@ namespace Scripter
             log.StartTiming("Loading plugin");
             try
             {
-                //bool hostResult = await Task.Run(PluginHost.Load);
                 PluginHost = new ExternalPluginHost(Env, compLocation);
                 PluginHost.Load();
 
-                if (PluginHost != null && PluginHost.IsPluginLoaded)
+                if (PluginHost.IsPluginLoaded)
                 {
                     PluginHost.CallSetup();
                 }
