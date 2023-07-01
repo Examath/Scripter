@@ -49,12 +49,12 @@ namespace Scripter
         {
             if (Executor != null)
             {
-                if (!(await Executor.TryLoad()))
+                if (!await Executor.TryLoad())
                 {
                     await Executor.CreateOrOpen();
                 }
 
-                Executor.Env.Out($"Press [Compile] (Alt+C) and then execute (green button or Alt+E)\nFor help using this application, um, er ... just use Microsoft Visual Studio");
+                Executor.Env.Out($"Press [Build] (Alt+B) and then execute (green button or Alt+E)\nFor help using this application, um, er ... just use Microsoft Visual Studio");
             }
 
             IsEnabled = true;
@@ -84,23 +84,30 @@ namespace Scripter
             return;
 #endif
 #pragma warning disable CS0162 // Unreachable code detected when DEBUG config
-            /*try
+            try
             {
-                File.WriteAllText(Properties.Settings.Default.FileName, Code.Text);
+                if (Executor != null)
+                {
+                    File.WriteAllText(Properties.Settings.Default.FileName + ".crashed", Executor.Code_Text);
+                }
+
 #pragma warning restore CS4014
                 Exception e = (Exception)args.ExceptionObject;
-                MessageBox.Show($"{e.GetType().Name}: {e.Message}\nPlanfile was saved. See crash.txt in current directory fore more info.", " An Unhandled Exception Occured", MessageBoxButton.OK, MessageBoxImage.Error);
-                File.WriteAllText(Core.GetFileName("\\crash.txt"),
-                    $"An unhandled exception occured at {DateTime.Now:g}\n" +
-                    $"A backup of PlanFile was saved at {Settings.Default.PlanFileLocation}.crashed\n" +
-                    $"Error Message:\t{e.Message}\n" +
-                    $"Stack Trace:\n{e.StackTrace}"
+                MessageBox.Show($"{e.GetType().Name}: {e.Message}\nCode was saved to {Properties.Settings.Default.FileName + ".crashed"}.\nSee crash.txt in the current directory for more info.", " An Unhandled Exception Occurred", MessageBoxButton.OK, MessageBoxImage.Error);
+                File.AppendAllLines(Properties.Settings.Default.FileName + ".crashed",
+                    new string[] {
+                        "________________________________",
+                        $"An unhandled exception occurred at {DateTime.Now:g}",
+                        $"A backup of the code (but not metadata) was saved at {Properties.Settings.Default.FileName}.crashed",
+                        $"Error Message:\t{e.Message}",
+                        $"Stack Trace:\n{e.StackTrace}"
+                    }
                     );
             }
             catch (Exception)
-            {*/
-            MessageBox.Show($"The code was not saved whist this app crashed. Oh well, you may as well use Visual Studio. Worth the lag, isn't it?", "Unhandled Exception", MessageBoxButton.OK, MessageBoxImage.Error);
-            //}
+            {
+                MessageBox.Show($"The code was not saved whist this app crashed. Oh well, you may as well use Visual Studio. Worth the lag, isn't it?", "Dual Unhandled Exception", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
 #pragma warning restore CS0162 // Unreachable code detected
         }
 

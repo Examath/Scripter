@@ -176,23 +176,23 @@ namespace Scripter
 
         private readonly System.Threading.Timer _ModifyTimer;
 
-        private string _CodeText = String.Empty;
+        public string Code_Text { get; private set; } = String.Empty;
 
         private void CodeModified(object? sender, DocumentChangeEventArgs e)
         {
             IsModified = true;
             IsCodeParsed = false;
-            _CodeText = Code.Text;
+            Code_Text = Code.Text;
             _ModifyTimer.Change(ModifyInterval, Timeout.InfiniteTimeSpan);
         }
 
         [RelayCommand]
         private async Task FormatDocument()
         {
-            if (!IsCodeParsed) await ParseAsync(_CodeText);
-            _CodeText = SyntaxTree.GetRoot().NormalizeWhitespace().ToString();
+            if (!IsCodeParsed) await ParseAsync(Code_Text);
+            Code_Text = SyntaxTree.GetRoot().NormalizeWhitespace().ToString();
             Code.BeginUpdate();
-            Code.Text = _CodeText;
+            Code.Text = Code_Text;
             Code.EndUpdate();
             IsModified = true;
         }
@@ -230,7 +230,7 @@ namespace Scripter
         {
             if (AutoParse && !IsCodeParsed)
             {
-                await ParseAsync(_CodeText);
+                await ParseAsync(Code_Text);
             }
         }
 
@@ -333,15 +333,14 @@ namespace Scripter
 
         #endregion
 
-        #region Compile
+        #region Build
 
         /// <summary>
         /// Compiles the code
         /// </summary>
-        /// <returns></returns>
         //https://github.com/joelmartinez/dotnet-core-roslyn-sample/blob/master/Program.cs
         [RelayCommand]
-        private async Task Compile()
+        private async Task Build()
         {
             // Preparation
             Log log = Env.StartLog($"Compiling {Path.GetFileName(FileLocation)}");
@@ -369,7 +368,7 @@ namespace Scripter
                 await ParseAsync(code);
             }
 
-            // Compile
+            // Build
             log.StartTiming("Compiling");
             string compLocation = Path.GetDirectoryName(FileLocation) + "\\" + Path.GetFileNameWithoutExtension(FileLocation) + Metadata.OutputKind.GetExtension();
             string assemblyName = Path.GetFileNameWithoutExtension(FileLocation).Replace(" ", "");

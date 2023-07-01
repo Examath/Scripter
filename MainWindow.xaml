@@ -12,7 +12,7 @@
         <local:Executor></local:Executor>
     </Window.DataContext>
     <Window.InputBindings>
-        <KeyBinding Key="C" Modifiers="Alt" Command="{Binding CompileCommand}"/>
+        <KeyBinding Key="B" Modifiers="Alt" Command="{Binding BuildCommand}"/>
         <KeyBinding Key="E" Modifiers="Alt" Command="{Binding PluginHost.ExecuteCommand}"/>
     </Window.InputBindings>
     <Grid Margin="4">
@@ -39,11 +39,18 @@
                     ToolTip="Execute Plugin (Alt+E)"
                     Content="{Binding PluginHost.Name, FallbackValue='Null'}">
                 <Button.Foreground>
-                    <SolidColorBrush Color="{Binding PluginHost.Color, FallbackValue=Green}"/>
+                    <SolidColorBrush Color="{Binding PluginHost.Colour, FallbackValue=Green}"/>
                 </Button.Foreground>
             </Button>
-            <Button Command="{Binding CompileCommand}" DockPanel.Dock="Right" ToolTip="Compile (Alt+C)"
-                    >Compile</Button>
+            <!--<Button DockPanel.Dock="Right" ToolTip="Build and run in external program">
+                <TextBlock>
+                    <Run Foreground="{StaticResource NewColourKey}" Style="{StaticResource Glyph}">&#xE768;</Run>
+                    <Run Text="Line"/>
+                </TextBlock>
+            </Button>
+            <Button Style="{StaticResource IconButtonStyle}" DockPanel.Dock="Right" Content="&#xF5B0;" Foreground="{StaticResource NewColourKey}" ToolTip="Build and Execute in Scripter" />-->
+            <Button Command="{Binding BuildCommand}" DockPanel.Dock="Right" ToolTip="Build (Alt+C)"
+                    >Build</Button>
             <Button Command="{Binding Env.ClearCommand}" DockPanel.Dock="Right" Foreground="{StaticResource OldColourKey}">Clear Console</Button>
         </DockPanel>
         <!--<TextBox Grid.Row="2" AcceptsReturn="True" AcceptsTab="True" Text="{Binding Code, UpdateSourceTrigger=PropertyChanged}"></TextBox>-->
@@ -119,9 +126,9 @@
                 Margin="2"
                 VerticalScrollBarVisibility="Auto" Grid.Column="2"
                 DataContext="{Binding Env}"
-                Document="{Binding Output}"
+                Document="{Binding Output}" Grid.RowSpan="2"
                 />
-        <DockPanel Grid.Row="5" Grid.RowSpan="1" Grid.ColumnSpan="3" LastChildFill="False">
+        <DockPanel Grid.Row="5" Grid.RowSpan="1" LastChildFill="False">
             <Label Style="{StaticResource OutputLabel}" x:Name="SelectionPositionLabel" Content="[]"/>
             <Label Style="{StaticResource OutputLabel}" Content="{Binding FileLocation}" Grid.Row="1"/>
             <controls:BoolOutput Text="*" IsChecked="{Binding IsModified}"/>

@@ -14,7 +14,7 @@ namespace Scripter
 {
     public class RunProcess : Plugin, IExecuteAsync
     {
-        public override Color Color => Color.FromRgb(0, 255, 255);
+        public override Color Colour => Color.FromRgb(0, 255, 255);
 
         public async Task Execute(Env e)
         {
