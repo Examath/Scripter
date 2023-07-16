@@ -37,7 +37,8 @@ namespace Scripter
 
             InitializeComponent();
             AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CrashHandler);
-            Executor = (Executor?)DataContext;
+            Executor = (Executor)DataContext;
+            Executor.FileLocation = Settings.Default.FileName;
             Title += $" {System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString()[0..^2]}";
 
             CodeEditor.TextArea.SelectionChanged += TextArea_SelectionChanged;
@@ -49,7 +50,7 @@ namespace Scripter
         {
             if (Executor != null)
             {
-                if (!await Executor.TryLoad())
+                if (Executor.TryLoad())
                 {
                     await Executor.CreateOrOpen();
                 }
@@ -73,6 +74,7 @@ namespace Scripter
                 if (await Executor.IsUserReadyToPartWithCurrentFile())
                 {
                     _IsReadyToClose = true;
+                    Settings.Default.FileName = Executor.FileLocation;
                     Application.Current.Shutdown();
                 }
             }

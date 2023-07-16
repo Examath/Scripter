@@ -111,7 +111,33 @@
             <Expander Header="Imports">
                 <DockPanel LastChildFill="False">
                     <ListBox x:Name="ImportsListBox" DockPanel.Dock="Top" Margin="2" Style="{StaticResource ContrastListBoxStyle}" 
-                             ItemsSource="{Binding Metadata.Imports}" d:ItemsSource="{d:SampleData ItemCount=5}"></ListBox>
+                             ItemsSource="{Binding Metadata.Imports}" d:ItemsSource="{d:SampleData ItemCount=5}">
+                        <ListBox.InputBindings>
+                            <KeyBinding Key="Delete" 
+                                        Command="{Binding RemoveImportCommand}"
+                                        CommandParameter="{Binding ElementName=ImportsListBox, Path=SelectedItem}"/>
+                        </ListBox.InputBindings>
+                        <ListBox.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Fix" 
+                                          Command="{Binding Metadata.FixCommand}" 
+                                          CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItem}"/>
+                                <MenuItem Header="Remove"
+                                          Command="{Binding RemoveImportCommand}"
+                                          CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItem}"/>
+                            </ContextMenu>
+                        </ListBox.ContextMenu>
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock x:Name="PART_TextBlock" Text="{Binding}"/>
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Binding="{Binding Image}" Value="{x:Null}">
+                                        <Setter TargetName="PART_TextBlock" Property="Background" Value="Red"/>
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
                     <Button Content="+ From File" Command="{Binding ImportFromFileCommand}"/>
                     <Button Content="-" Foreground="{StaticResource OldColourKey}" Command="{Binding RemoveImportCommand}"
                             CommandParameter="{Binding ElementName=ImportsListBox, Path=SelectedItem}"/>

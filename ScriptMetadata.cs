@@ -1,15 +1,12 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Examath.Core.Environment;
 using Microsoft.CodeAnalysis;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Loader;
-using System.Text;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
+using System.Windows.Forms;
 using System.Xml.Serialization;
 
 namespace Scripter
@@ -67,14 +64,33 @@ namespace Scripter
 
         #region Commands
 
+        [RelayCommand]
+        public void Fix(Import? import)
+        {
+            if (import != null)
+            {
+                OpenFileDialog openFileDialog = new()
+                {
+                    Title = $"Fix {import.Location}",
+                    Filter = "Dynamic Link Library (*.dll)|*.dll|All files|*.*",
+                };
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    import.Location = openFileDialog.FileName;
+                }
+            }
+        }
+
         #endregion
     }
 
-    public class Import : ObservableObject
+    public partial class Import : ObservableObject
     {
         private string _Location = string.Empty;
+
         /// <summary>
-        /// Gets or sets 
+        /// Gets or sets the location of the import library
         /// </summary>
         [XmlText]
         public string Location
@@ -82,23 +98,41 @@ namespace Scripter
             get => _Location;
             set
             {
+                if (!File.Exists(value))
+                {
+                    Match m = LibRef().Match(value);
+                    if (m.Success)
+                    {
+                        DirectoryInfo directoryInfo = new(m.Groups[1].Value);
+                        if (directoryInfo.Exists)
+                        {
+                            DirectoryInfo? sub = directoryInfo.GetDirectories().OrderByDescending(d => d.Name).FirstOrDefault();
+                            if (sub != null)
+                            {
+                                value = sub.FullName + m.Groups[2].Value;
+                            }
+                        }
+                    }
+                }
+
                 if (SetProperty(ref _Location, value))
                 {
-                    Image = MetadataReference.CreateFromFile(value);
-                };
+                    if (File.Exists(value))
+                    {
+                        Image = MetadataReference.CreateFromFile(value);
+                    };
+                }
             }
         }
 
-
+        private MetadataReference? _Image;
         /// <summary>
         /// The <see cref="MetadataReference"/> associated with this import
         /// </summary>
         [XmlIgnore]
-        public MetadataReference Image { get; private set; }
+        public MetadataReference? Image { get => _Image; private set => SetProperty(ref _Image, value); }
 
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public Import()
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
 
         }
@@ -124,13 +158,19 @@ namespace Scripter
         public Import(string location)
         {
             _Location = location;
-            Image = MetadataReference.CreateFromFile(_Location);
+            if (File.Exists(location))
+            {
+                Image = MetadataReference.CreateFromFile(_Location);
+            }
         }
 
         public override string ToString()
         {
             return Location;
         }
+
+        [GeneratedRegex(@"^(.*)\\.*(\\.*)")]
+        private static partial Regex LibRef();
     }
 
     public enum ScripterOutputKind

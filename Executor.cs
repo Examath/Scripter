@@ -61,26 +61,30 @@ namespace Scripter
 
         private readonly XmlSerializer _MetadataSerializer = new(typeof(ScriptMetadata));
 
-        public override string FileLocation
-        {
-            get => Settings.Default.FileName;
-#pragma warning disable CS8765 // Nullability of type of parameter doesn't match overridden member (possibly because of nullability attributes).
-            set
-#pragma warning restore CS8765 // Nullability of type of parameter doesn't match overridden member (possibly because of nullability attributes).
-            {
-                Settings.Default.FileName = value;
-                Settings.Default.Save();
-                OnPropertyChanged(nameof(FileLocation));
-                SaveCommand.NotifyCanExecuteChanged();
-            }
-        }
-
         public override void CreateFile()
         {
             RemoveCodeEventHandlers();
             Code = new();
             AddCodeEventHandlers();
             ResetMetadata();
+        }
+
+        public override void LoadFile()
+        {
+            if (FileLocation != null)
+            {
+                Log log = _Env.StartLog();
+                log.StartTiming($"Opening {Path.GetFileName(FileLocation)}");
+
+                string[] parts = File.ReadAllText(FileLocation).Split(METADATA_START_SYMBOL);
+                Code.Text = parts[0];
+                NotifyChange($"Opened {Path.GetFileName(FileLocation)}");
+                SyntaxTree = CSharpSyntaxTree.ParseText(parts[0]);
+
+                LoadMetadata(log, parts);
+
+                log.EndTiming($"{parts[0].Length / 1024:0.0} kB");
+            };
         }
 
         public override async Task LoadFileAsync()
@@ -92,52 +96,77 @@ namespace Scripter
 
                 string[] parts = (await File.ReadAllTextAsync(FileLocation)).Split(METADATA_START_SYMBOL);
                 Code.Text = parts[0];
-                IsModified = false;
+                NotifyChange($"Opened {Path.GetFileName(FileLocation)}");
                 await Task.Run(() => SyntaxTree = CSharpSyntaxTree.ParseText(parts[0]));
 
-                try
+                LoadMetadata(log, parts);
+
+                log.EndTiming($"{parts[0].Length / 1024:0.0} kB");
+            };
+        }
+
+        private void LoadMetadata(Log log, string[] parts)
+        {
+            try
+            {
+                if (parts.Length >= 2)
                 {
-                    if (parts.Length >= 2)
+                    // parts[1] contains metadata, inside /*...*/ comment.
+                    // Hence the end symbol are removed
+                    using TextReader reader = new StringReader(parts[1][..^METADATA_END_SYMBOL.Length]);
+                    object? result = _MetadataSerializer.Deserialize(reader);
+                    if (result is ScriptMetadata metadata)
                     {
-                        // parts[1] contains metadata, inside /*...*/ comment.
-                        // Hence the end symbol are removed
-                        using TextReader reader = new StringReader(parts[1][..^METADATA_END_SYMBOL.Length]);
-                        object? result = _MetadataSerializer.Deserialize(reader);
-                        if (result is ScriptMetadata metadata)
-                        {
-                            Metadata = metadata;
-                        }
-                        else
-                        {
-                            ResetMetadata();
-                        }
+                        Metadata = metadata;
                     }
                     else
                     {
                         ResetMetadata();
                     }
                 }
-                catch (Exception e)
+                else
                 {
-                    log.OutException(e, "Loading Metadata");
                     ResetMetadata();
                 }
+            }
+            catch (Exception e)
+            {
+                log.OutException(e, "Loading Metadata");
+                ResetMetadata();
+            }
+        }
 
-                log.EndTiming($"{parts[0].Length / 1024:0.0} kB");
-            };
+        public override void SaveFile()
+        {
+            if (FileLocation != null)
+            {
+                if (Path.GetExtension(FileLocation) == ".cs")
+                {
+                    File.WriteAllText(FileLocation, Code.Text);
+                }
+                else
+                {
+                    StringWriter stringWriter = new();
+                    _MetadataSerializer.Serialize(stringWriter, Metadata);
+                    File.WriteAllText(FileLocation, Code.Text + METADATA_START_SYMBOL + stringWriter.ToString() + METADATA_END_SYMBOL);
+                }
+            }
         }
 
         public override async Task SaveFileAsync()
         {
-            if (Path.GetExtension(FileLocation) == ".cs")
+            if (FileLocation != null)
             {
-                await File.WriteAllTextAsync(FileLocation, Code.Text);
-            }
-            else
-            {
-                StringWriter stringWriter = new();
-                _MetadataSerializer.Serialize(stringWriter, Metadata);
-                await File.WriteAllTextAsync(FileLocation, Code.Text + METADATA_START_SYMBOL + stringWriter.ToString() + METADATA_END_SYMBOL);
+                if (Path.GetExtension(FileLocation) == ".cs")
+                {
+                    await File.WriteAllTextAsync(FileLocation, Code.Text);
+                }
+                else
+                {
+                    StringWriter stringWriter = new();
+                    _MetadataSerializer.Serialize(stringWriter, Metadata);
+                    await File.WriteAllTextAsync(FileLocation, Code.Text + METADATA_START_SYMBOL + stringWriter.ToString() + METADATA_END_SYMBOL);
+                }
             }
         }
         #endregion
@@ -151,7 +180,7 @@ namespace Scripter
         public TextDocument Code
         {
             get => _Code;
-            set { if (SetProperty(ref _Code, value)) IsModified = true; }
+            set { if (SetProperty(ref _Code, value)) NotifyChange(value); }
         }
 
         /// <summary>
@@ -180,7 +209,7 @@ namespace Scripter
 
         private void CodeModified(object? sender, DocumentChangeEventArgs e)
         {
-            IsModified = true;
+            NotifyChange(e.Offset);
             IsCodeParsed = false;
             Code_Text = Code.Text;
             _ModifyTimer.Change(ModifyInterval, Timeout.InfiniteTimeSpan);
@@ -194,7 +223,7 @@ namespace Scripter
             Code.BeginUpdate();
             Code.Text = Code_Text;
             Code.EndUpdate();
-            IsModified = true;
+            NotifyChange(SyntaxTree);
         }
 
         #endregion Code
@@ -208,7 +237,7 @@ namespace Scripter
         public bool IsCodeParsed
         {
             get => _IsCodeParsed;
-            set=> SetProperty(ref _IsCodeParsed, value);
+            set => SetProperty(ref _IsCodeParsed, value);
         }
 
         private SyntaxTree SyntaxTree { get; set; }
@@ -267,7 +296,7 @@ namespace Scripter
         [RelayCommand]
         public void ImportFromFile()
         {
-            IsModified = true;
+
             OpenFileDialog openFileDialog = new()
             {
                 Filter = "Dynamic Link Library (.dll)|*.dll|All files|*.*",
@@ -277,7 +306,9 @@ namespace Scripter
             {
                 try
                 {
-                    Metadata.Imports.Add(new(openFileDialog.FileName));
+                    Import import = new(openFileDialog.FileName);
+                    Metadata.Imports.Add(import);
+                    NotifyChange(import);
                 }
                 catch (Exception e)
                 {
@@ -292,7 +323,7 @@ namespace Scripter
         {
             if (import != null && Metadata.Imports.Remove(import))
             {
-                IsModified = true;
+                NotifyChange(import);
             }
         }
 
@@ -312,7 +343,7 @@ namespace Scripter
                         new(typeof(Env)),
                     },
             };
-            IsModified = true;
+            NotifyChange(Metadata);
         }
 
         #endregion
@@ -342,6 +373,12 @@ namespace Scripter
         [RelayCommand]
         private async Task Build()
         {
+            if (FileLocation == null) 
+            {
+                await SaveAs();
+                if (FileLocation == null) return;
+            }
+
             // Preparation
             Log log = Env.StartLog($"Compiling {Path.GetFileName(FileLocation)}");
             log.Out($"{Metadata.OutputKind} with {Metadata.Imports.Count} imports");
@@ -353,12 +390,19 @@ namespace Scripter
                 log.StartTiming("Saving code");
                 await Save();
             }
+            
+            // Checking Metadata
+            if (Metadata.Imports.Where((r) => r.Image == null).Any())
+            {
+                log.Out($"The following imports are broken:\n  - {string.Join("\n  - ", Metadata.Imports.Where((r) => r.Image == null))}\nFix or delete these to continue.");
+                return;
+            }
 
-            //Unloading
+            // Unloading
             if (PluginHost is ExternalPluginHost externalPluginHost)
             {
                 await externalPluginHost.UnloadAsync(log);
-            }
+            }            
 
             // Parsing
             if (!IsCodeParsed)
@@ -372,7 +416,9 @@ namespace Scripter
             log.StartTiming("Compiling");
             string compLocation = Path.GetDirectoryName(FileLocation) + "\\" + Path.GetFileNameWithoutExtension(FileLocation) + Metadata.OutputKind.GetExtension();
             string assemblyName = Path.GetFileNameWithoutExtension(FileLocation).Replace(" ", "");
-            MetadataReference[] references = Metadata.Imports.Select(r => r.Image).ToArray();
+#pragma warning disable CS8603 // Possible null reference return.
+            MetadataReference[] references = Metadata.Imports.Select<Import, MetadataReference>(r => r.Image).ToArray();
+#pragma warning restore CS8603 // Possible null reference return.
 
             FileStream fileStream;
             try
