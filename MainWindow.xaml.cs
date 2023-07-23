@@ -50,9 +50,9 @@ namespace Scripter
         {
             if (Executor != null)
             {
-                if (Executor.TryLoad())
+                if (!Executor.TryLoad())
                 {
-                    await Executor.CreateOrOpen();
+                    Executor.CreateFile();
                 }
 
                 Executor.Env.Out($"Press [Build] (Alt+B) and then execute (green button or Alt+E)\nFor help using this application, um, er ... just use Microsoft Visual Studio");
