@@ -34,7 +34,7 @@ namespace Scripter
         {
             AddCodeEventHandlers();
             _ModifyTimer = new(_ => AutoParseAsync());
-            Env.Default = Env;
+            Env = Env.Default;
             Env.Model = _SModel;
         }
 
